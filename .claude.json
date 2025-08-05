@@ -1,0 +1,29 @@
+{
+  "project": "ImageCon",
+  "description": "Web-based image batch converter with drag-and-drop interface",
+  "version": "1.0.0",
+  "preferences": {
+    "language": "ko",
+    "codeStyle": "clean",
+    "testingApproach": "manual",
+    "deploymentPlatform": "render"
+  },
+  "features": {
+    "imageFormats": ["jpg", "jpeg", "png", "webp", "gif", "bmp"],
+    "resizeModes": ["fit", "crop1000"],
+    "maxFileSize": "50MB",
+    "batchProcessing": true
+  },
+  "techStack": {
+    "backend": "Python Flask",
+    "frontend": "HTML5, CSS3, JavaScript",
+    "imageProcessing": "Pillow",
+    "deployment": "Render"
+  },
+  "developmentGuidelines": {
+    "gitCommits": "Clear, descriptive messages",
+    "errorHandling": "User-friendly messages in Korean",
+    "performance": "Optimize for batch processing",
+    "security": "Validate file types and sizes"
+  }
+}
