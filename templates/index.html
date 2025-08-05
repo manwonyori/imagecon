@@ -449,6 +449,12 @@
                     })
                 });
                 
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('서버 응답 오류:', errorData);
+                    throw new Error(errorData.error || `서버 오류 (${response.status})`);
+                }
+                
                 const result = await response.json();
                 
                 if (result.success) {
@@ -469,7 +475,17 @@
                 }
                 
             } catch (error) {
-                alert('오류가 발생했습니다: ' + error.message);
+                console.error('변환 오류:', error);
+                
+                // 서버 응답이 있는 경우 상세 정보 표시
+                if (error.response) {
+                    error.response.json().then(data => {
+                        console.error('서버 오류 상세:', data);
+                        alert(`오류가 발생했습니다:\n${data.error || error.message}\n\n자세한 내용은 브라우저 콘솔을 확인하세요.`);
+                    });
+                } else {
+                    alert(`오류가 발생했습니다: ${error.message}\n\n가능한 원인:\n- 파일 형식 문제\n- 파일 크기 초과 (50MB)\n- 네트워크 연결 문제`);
+                }
                 progressSection.style.display = 'none';
             }
         }

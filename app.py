@@ -144,7 +144,14 @@ def convert_images():
         return jsonify(response)
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        import traceback
+        error_detail = {
+            'error': str(e),
+            'type': type(e).__name__,
+            'traceback': traceback.format_exc()
+        }
+        print(f"Error in convert_images: {error_detail}")
+        return jsonify({'error': f'서버 오류: {str(e)}', 'detail': error_detail}), 500
 
 @app.route('/download-zip', methods=['POST'])
 def download_zip():
