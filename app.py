@@ -48,23 +48,38 @@ def convert_images():
             # 리사이징 모드에 따른 처리
             if resize_mode == 'crop1000':
                 # 1000x1000 정사각형으로 크롭
-                # 먼저 짧은 쪽이 1000px이 되도록 리사이즈
                 img_width, img_height = img.size
-                if img_width > img_height:
-                    new_width = int(1000 * img_width / img_height)
-                    new_height = 1000
+                
+                # 이미 1000x1000 이하인 경우 패딩 추가
+                if img_width <= 1000 and img_height <= 1000:
+                    # 새 캔버스 생성
+                    new_img = Image.new(img.mode if img.mode != 'RGBA' else 'RGB', (1000, 1000), (255, 255, 255))
+                    # 중앙에 붙이기
+                    left = (1000 - img_width) // 2
+                    top = (1000 - img_height) // 2
+                    if img.mode == 'RGBA':
+                        new_img.paste(img, (left, top), img)
+                    else:
+                        new_img.paste(img, (left, top))
+                    img = new_img
                 else:
-                    new_width = 1000
-                    new_height = int(1000 * img_height / img_width)
-                
-                img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
-                
-                # 중앙에서 1000x1000 크롭
-                left = (new_width - 1000) // 2
-                top = (new_height - 1000) // 2
-                right = left + 1000
-                bottom = top + 1000
-                img = img.crop((left, top, right, bottom))
+                    # 큰 이미지는 중앙 크롭
+                    # 먼저 짧은 쪽이 1000px이 되도록 리사이즈
+                    if img_width > img_height:
+                        new_width = int(1000 * img_width / img_height)
+                        new_height = 1000
+                    else:
+                        new_width = 1000
+                        new_height = int(1000 * img_height / img_width)
+                    
+                    img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+                    
+                    # 중앙에서 1000x1000 크롭
+                    left = (new_width - 1000) // 2
+                    top = (new_height - 1000) // 2
+                    right = left + 1000
+                    bottom = top + 1000
+                    img = img.crop((left, top, right, bottom))
             else:
                 # 기존 방식: 비율 유지하며 리사이징
                 if max(img.size) > max_size:

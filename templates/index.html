@@ -357,9 +357,16 @@
         
         // 파일 처리
         async function handleFiles(files) {
-            const imageFiles = Array.from(files).filter(file => 
-                file.type.startsWith('image/')
-            );
+            // 파일 형식 확인 개선
+            const imageFiles = Array.from(files).filter(file => {
+                // MIME 타입 체크
+                if (file.type && file.type.startsWith('image/')) return true;
+                
+                // 확장자 체크 (MIME 타입이 없는 경우)
+                const validExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
+                const extension = file.name.split('.').pop().toLowerCase();
+                return validExtensions.includes(extension);
+            });
             
             if (imageFiles.length === 0) {
                 alert('이미지 파일을 선택해주세요.');
@@ -450,8 +457,13 @@
                 const div = document.createElement('div');
                 div.className = 'preview-item';
                 div.style.cursor = 'pointer';
+                
+                // 확장자에 따른 올바른 MIME 타입 설정
+                const ext = img.name.split('.').pop().toLowerCase();
+                const mimeType = ext === 'jpg' || ext === 'jpeg' ? 'jpeg' : ext;
+                
                 div.innerHTML = `
-                    <img src="data:image/${formatSelect.value};base64,${img.data}" alt="${img.name}">
+                    <img src="data:image/${mimeType};base64,${img.data}" alt="${img.name}">
                     <div class="preview-info">${img.name}</div>
                 `;
                 div.addEventListener('click', () => downloadSingleImage(img));
