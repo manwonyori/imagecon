@@ -434,6 +434,12 @@
             // 서버로 전송
             try {
                 status.textContent = '이미지 변환 중...';
+                console.log('변환 요청:', {
+                    imageCount: images.length,
+                    format: formatSelect.value,
+                    quality: parseInt(qualitySlider.value),
+                    resizeMode: resizeModeSelect.value
+                });
                 
                 const response = await fetch('/convert', {
                     method: 'POST',
@@ -456,8 +462,9 @@
                 }
                 
                 const result = await response.json();
+                console.log('서버 응답:', result);
                 
-                if (result.success) {
+                if (result.success || (result.images && result.images.length > 0)) {
                     convertedImages = result.images;
                     
                     // 에러가 있으면 표시
@@ -469,7 +476,11 @@
                         alert(errorMsg);
                     }
                     
-                    showResults();
+                    if (convertedImages.length > 0) {
+                        showResults();
+                    } else {
+                        throw new Error('변환된 이미지가 없습니다');
+                    }
                 } else {
                     throw new Error(result.error || '변환 실패');
                 }

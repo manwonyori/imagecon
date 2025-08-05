@@ -141,6 +141,17 @@ def convert_images():
             response['errors'] = errors
             response['errorCount'] = len(errors)
         
+        # 모든 이미지가 실패한 경우
+        if len(converted_images) == 0 and len(errors) > 0:
+            error_summary = '; '.join([f"{e['name']}: {e['error']}" for e in errors[:3]])
+            if len(errors) > 3:
+                error_summary += f' 외 {len(errors)-3}개'
+            return jsonify({
+                'success': False,
+                'error': f'모든 이미지 변환 실패: {error_summary}',
+                'errors': errors
+            }), 400
+        
         return jsonify(response)
         
     except Exception as e:
