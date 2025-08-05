@@ -28,14 +28,23 @@ def convert_images():
             return jsonify({'error': '이미지가 없습니다'}), 400
         
         converted_images = []
+        errors = []
         
-        for img_data in images:
-            # Base64 디코딩
+        for idx, img_data in enumerate(images):
             img_name = img_data['name']
-            img_content = base64.b64decode(img_data['data'].split(',')[1])
             
-            # PIL로 이미지 열기
-            img = Image.open(io.BytesIO(img_content))
+            try:
+                # Base64 디코딩
+                img_content = base64.b64decode(img_data['data'].split(',')[1])
+                
+                # PIL로 이미지 열기
+                img = Image.open(io.BytesIO(img_content))
+            except Exception as e:
+                errors.append({
+                    'name': img_name,
+                    'error': f'이미지 읽기 오류: {str(e)}'
+                })
+                continue
             
             # RGBA를 RGB로 변환 (JPG용)
             if output_format == 'jpg' and img.mode in ('RGBA', 'LA', 'P'):
@@ -96,27 +105,43 @@ def convert_images():
                 save_kwargs['quality'] = quality
                 save_kwargs['method'] = 6
             
-            img.save(output, format=output_format.upper(), **save_kwargs)
-            output.seek(0)
-            
-            # Base64로 인코딩하여 반환
-            base_name = os.path.splitext(img_name)[0]
-            if resize_mode == 'crop1000':
-                new_name = f"{base_name}_1000x1000.{output_format}"
-            else:
-                new_name = f"{base_name}.{output_format}"
-            
-            converted_images.append({
-                'name': new_name,
-                'data': base64.b64encode(output.getvalue()).decode(),
-                'size': len(output.getvalue())
-            })
+            try:
+                img.save(output, format=output_format.upper(), **save_kwargs)
+                output.seek(0)
+                
+                # Base64로 인코딩하여 반환
+                base_name = os.path.splitext(img_name)[0]
+                if resize_mode == 'crop1000':
+                    new_name = f"{base_name}_1000x1000.{output_format}"
+                else:
+                    new_name = f"{base_name}.{output_format}"
+                
+                converted_images.append({
+                    'name': new_name,
+                    'data': base64.b64encode(output.getvalue()).decode(),
+                    'size': len(output.getvalue())
+                })
+                
+            except Exception as e:
+                errors.append({
+                    'name': img_name,
+                    'error': f'변환 오류: {str(e)}'
+                })
+            finally:
+                img.close()
         
-        return jsonify({
-            'success': True,
+        # 결과 반환
+        response = {
+            'success': len(converted_images) > 0,
             'images': converted_images,
             'count': len(converted_images)
-        })
+        }
+        
+        if errors:
+            response['errors'] = errors
+            response['errorCount'] = len(errors)
+        
+        return jsonify(response)
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500

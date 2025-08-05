@@ -358,20 +358,54 @@
         // 파일 처리
         async function handleFiles(files) {
             // 파일 형식 확인 개선
-            const imageFiles = Array.from(files).filter(file => {
-                // MIME 타입 체크
-                if (file.type && file.type.startsWith('image/')) return true;
+            const validFiles = [];
+            const invalidFiles = [];
+            const oversizedFiles = [];
+            const maxSizeMB = 50;
+            
+            Array.from(files).forEach(file => {
+                // 파일 크기 체크 (50MB)
+                if (file.size > maxSizeMB * 1024 * 1024) {
+                    oversizedFiles.push(`${file.name} (${Math.round(file.size / 1024 / 1024)}MB)`);
+                    return;
+                }
                 
-                // 확장자 체크 (MIME 타입이 없는 경우)
-                const validExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
+                // MIME 타입 체크
+                if (file.type && file.type.startsWith('image/')) {
+                    validFiles.push(file);
+                    return;
+                }
+                
+                // 확장자 체크 (대소문자 무관)
+                const validExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'tiff', 'tif'];
                 const extension = file.name.split('.').pop().toLowerCase();
-                return validExtensions.includes(extension);
+                
+                if (validExtensions.includes(extension)) {
+                    validFiles.push(file);
+                } else {
+                    invalidFiles.push(`${file.name} (.${extension})`);
+                }
             });
             
-            if (imageFiles.length === 0) {
-                alert('이미지 파일을 선택해주세요.');
+            // 오류 메시지 생성
+            let errorMessage = '';
+            if (invalidFiles.length > 0) {
+                errorMessage += `지원하지 않는 파일 형식:\n${invalidFiles.join('\n')}\n\n`;
+            }
+            if (oversizedFiles.length > 0) {
+                errorMessage += `파일 크기 초과 (최대 ${maxSizeMB}MB):\n${oversizedFiles.join('\n')}\n\n`;
+            }
+            
+            if (errorMessage) {
+                errorMessage += '지원 형식: JPG, PNG, GIF, BMP, WEBP, TIFF';
+                alert(errorMessage);
+            }
+            
+            if (validFiles.length === 0) {
                 return;
             }
+            
+            const imageFiles = validFiles;
             
             progressSection.style.display = 'block';
             downloadSection.style.display = 'none';
@@ -419,6 +453,16 @@
                 
                 if (result.success) {
                     convertedImages = result.images;
+                    
+                    // 에러가 있으면 표시
+                    if (result.errors && result.errors.length > 0) {
+                        let errorMsg = `${result.count}개 성공, ${result.errorCount}개 실패:\n\n`;
+                        result.errors.forEach(err => {
+                            errorMsg += `❌ ${err.name}: ${err.error}\n`;
+                        });
+                        alert(errorMsg);
+                    }
+                    
                     showResults();
                 } else {
                     throw new Error(result.error || '변환 실패');
