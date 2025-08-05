@@ -111,6 +111,7 @@ def download_zip():
     try:
         data = request.json
         images = data.get('images', [])
+        folder_name = data.get('folderName', 'converted_images')
         
         if not images:
             return jsonify({'error': '이미지가 없습니다'}), 400
@@ -119,19 +120,41 @@ def download_zip():
         temp = tempfile.NamedTemporaryFile(delete=False, suffix='.zip')
         
         with zipfile.ZipFile(temp.name, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            # 폴더 구조로 저장
             for img in images:
                 img_data = base64.b64decode(img['data'])
-                zipf.writestr(img['name'], img_data)
+                # 폴더명/파일명 형태로 저장
+                file_path = f"{folder_name}/{img['name']}"
+                zipf.writestr(file_path, img_data)
         
         temp.close()
         
         # ZIP 파일 전송
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        zip_filename = f'{folder_name}_{timestamp}.zip'
+        
         return send_file(
             temp.name,
             as_attachment=True,
-            download_name=f'converted_images_{timestamp}.zip',
+            download_name=zip_filename,
             mimetype='application/zip'
+        )
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/download-individual/<filename>', methods=['POST'])
+def download_individual(filename):
+    try:
+        data = request.json
+        img_data = base64.b64decode(data['data'])
+        
+        # 메모리에서 직접 전송
+        return send_file(
+            io.BytesIO(img_data),
+            as_attachment=True,
+            download_name=filename,
+            mimetype=f'image/{filename.split(".")[-1]}'
         )
         
     except Exception as e:
