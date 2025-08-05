@@ -3,4 +3,7 @@ services:
     name: imagecon
     env: python
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn app:app"
+    startCommand: "gunicorn app:app --timeout 120 --workers 2"
+    envVars:
+      - key: GUNICORN_TIMEOUT
+        value: 120

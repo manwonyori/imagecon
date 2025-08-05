@@ -361,10 +361,10 @@
             const validFiles = [];
             const invalidFiles = [];
             const oversizedFiles = [];
-            const maxSizeMB = 50;
+            const maxSizeMB = 100;  // 개별 파일 100MB 제한
             
             Array.from(files).forEach(file => {
-                // 파일 크기 체크 (50MB)
+                // 파일 크기 체크 (100MB)
                 if (file.size > maxSizeMB * 1024 * 1024) {
                     oversizedFiles.push(`${file.name} (${Math.round(file.size / 1024 / 1024)}MB)`);
                     return;

@@ -16,7 +16,8 @@
 
 입력: JPG, JPEG, PNG, GIF, BMP, WEBP, TIFF
 출력: JPG, PNG, WEBP
-최대 파일 크기: 50MB
+최대 파일 크기: 100MB (개별 파일)
+최대 총 용량: 200MB
 
 ## 크기 조절 옵션
 

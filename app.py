@@ -8,7 +8,7 @@ import zipfile
 import tempfile
 
 app = Flask(__name__)
-app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max
+app.config['MAX_CONTENT_LENGTH'] = 200 * 1024 * 1024  # 200MB max
 
 @app.route('/')
 def index():
