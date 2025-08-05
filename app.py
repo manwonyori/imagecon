@@ -22,6 +22,7 @@ def convert_images():
         output_format = data.get('format', 'jpg')
         quality = data.get('quality', 85)
         max_size = data.get('maxSize', 1920)
+        resize_mode = data.get('resizeMode', 'fit')  # 'fit', 'crop1000'
         
         if not images:
             return jsonify({'error': '이미지가 없습니다'}), 400
@@ -44,9 +45,30 @@ def convert_images():
                 background.paste(img, mask=img.split()[-1] if img.mode == 'RGBA' else None)
                 img = background
             
-            # 리사이징
-            if max(img.size) > max_size:
-                img.thumbnail((max_size, max_size), Image.Resampling.LANCZOS)
+            # 리사이징 모드에 따른 처리
+            if resize_mode == 'crop1000':
+                # 1000x1000 정사각형으로 크롭
+                # 먼저 짧은 쪽이 1000px이 되도록 리사이즈
+                img_width, img_height = img.size
+                if img_width > img_height:
+                    new_width = int(1000 * img_width / img_height)
+                    new_height = 1000
+                else:
+                    new_width = 1000
+                    new_height = int(1000 * img_height / img_width)
+                
+                img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+                
+                # 중앙에서 1000x1000 크롭
+                left = (new_width - 1000) // 2
+                top = (new_height - 1000) // 2
+                right = left + 1000
+                bottom = top + 1000
+                img = img.crop((left, top, right, bottom))
+            else:
+                # 기존 방식: 비율 유지하며 리사이징
+                if max(img.size) > max_size:
+                    img.thumbnail((max_size, max_size), Image.Resampling.LANCZOS)
             
             # 메모리에 저장
             output = io.BytesIO()
@@ -64,7 +86,10 @@ def convert_images():
             
             # Base64로 인코딩하여 반환
             base_name = os.path.splitext(img_name)[0]
-            new_name = f"{base_name}.{output_format}"
+            if resize_mode == 'crop1000':
+                new_name = f"{base_name}_1000x1000.{output_format}"
+            else:
+                new_name = f"{base_name}.{output_format}"
             
             converted_images.append({
                 'name': new_name,

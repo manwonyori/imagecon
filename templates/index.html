@@ -231,6 +231,14 @@
             </div>
             
             <div class="setting-group">
+                <label for="resizeMode">크기 조절 방식:</label>
+                <select id="resizeMode">
+                    <option value="fit">비율 유지</option>
+                    <option value="crop1000">1000x1000 정사각형</option>
+                </select>
+            </div>
+            
+            <div class="setting-group" id="maxSizeGroup">
                 <label for="maxSize">최대 크기 (px):</label>
                 <input type="number" id="maxSize" value="1920" min="100" max="5000">
             </div>
@@ -265,6 +273,8 @@
         const qualitySlider = document.getElementById('quality');
         const qualityValue = document.getElementById('qualityValue');
         const maxSizeInput = document.getElementById('maxSize');
+        const resizeModeSelect = document.getElementById('resizeMode');
+        const maxSizeGroup = document.getElementById('maxSizeGroup');
         const progressSection = document.getElementById('progressSection');
         const progressFill = document.getElementById('progressFill');
         const status = document.getElementById('status');
@@ -279,6 +289,15 @@
         // 품질 슬라이더 업데이트
         qualitySlider.addEventListener('input', (e) => {
             qualityValue.textContent = e.target.value;
+        });
+        
+        // 크기 조절 방식 변경시
+        resizeModeSelect.addEventListener('change', (e) => {
+            if (e.target.value === 'crop1000') {
+                maxSizeGroup.style.display = 'none';
+            } else {
+                maxSizeGroup.style.display = 'flex';
+            }
         });
         
         // 드래그 앤 드롭 이벤트
@@ -351,7 +370,8 @@
                         images: images,
                         format: formatSelect.value,
                         quality: parseInt(qualitySlider.value),
-                        maxSize: parseInt(maxSizeInput.value)
+                        maxSize: parseInt(maxSizeInput.value),
+                        resizeMode: resizeModeSelect.value
                     })
                 });
                 
