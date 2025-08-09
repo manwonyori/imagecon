@@ -176,43 +176,37 @@ def convert_to_rgb(img, output_format):
     return img
 
 def make_square(img, size):
-    """이미지를 정사각형으로 만들기 (개선된 버전)"""
+    """이미지를 정사각형으로 크롭 (중앙 크롭 방식)"""
     width, height = img.size
     
     # 이미 목표 크기인 경우
     if width == size and height == size:
         return img
     
-    # 작은 이미지는 패딩
-    if width <= size and height <= size:
-        # 배경 생성 (투명 지원)
-        if img.mode == 'RGBA':
-            new_img = Image.new('RGBA', (size, size), (255, 255, 255, 0))
-        else:
-            new_img = Image.new('RGB', (size, size), (255, 255, 255))
-        
-        # 중앙 정렬
-        left = (size - width) // 2
-        top = (size - height) // 2
-        new_img.paste(img, (left, top))
-        return new_img
+    # Step 1: 짧은 쪽을 기준으로 크롭할 영역 계산
+    if width > height:
+        # 가로가 더 긴 경우 - 좌우를 잘라냄
+        crop_size = height
+        left = (width - crop_size) // 2
+        top = 0
+        right = left + crop_size
+        bottom = crop_size
+    else:
+        # 세로가 더 긴 경우 - 상하를 잘라냄
+        crop_size = width
+        left = 0
+        top = (height - crop_size) // 2
+        right = crop_size
+        bottom = top + crop_size
     
-    # 큰 이미지는 스마트 크롭
-    # 비율 계산
-    scale = size / min(width, height)
-    new_width = int(width * scale)
-    new_height = int(height * scale)
+    # Step 2: 정사각형으로 크롭
+    img = img.crop((left, top, right, bottom))
     
-    # 고품질 리사이징
-    img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+    # Step 3: 목표 크기(1000x1000)로 리사이즈
+    if img.size[0] != size:
+        img = img.resize((size, size), Image.Resampling.LANCZOS)
     
-    # 중앙 크롭
-    left = (new_width - size) // 2
-    top = (new_height - size) // 2
-    right = left + size
-    bottom = top + size
-    
-    return img.crop((left, top, right, bottom))
+    return img
 
 def process_single_image(img_data, output_format, quality, max_size, resize_mode):
     """단일 이미지 처리"""
